@@ -487,8 +487,8 @@ if __name__ == '__main__':
         z_init_m = 0e-3
         z_final_m = 250e-3
         dz_m = 2e-3
-        #range_B = '0.1T'
-        range_B = '1T'
+        range_B = '0.1T'
+       # range_B = '1T'
         x='p0000' #string in microns 
         y='p0000' #string in microns 
         duration_at_position = 1.0
