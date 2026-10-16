@@ -1,11 +1,9 @@
-
 import os
 import sys
 
 sys.path.append(
     '/mn/fys-server1/a1/pierredr/Documents/4-pythonLibraries/pyTHM1176'
 )
-
 
 import time
 import threading
@@ -35,6 +33,7 @@ L_step = L_cal / steps_cal  # Motor step size [m / step]
 timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
 
 axis = None
+
 
 # ---------------------------------------------------------------------
 # Motor functions
@@ -208,10 +207,11 @@ def save_data_to_csv(data, output_file):
 
     Bx, By, and Bz are stored in T.
     """
+    # Below Bx, By and bz from the probe have been re-arrange to correspond to the coordinate system we chose
     table = np.column_stack((
-        data['By'],
-        data['Bz'],
-        data['Bx'], #this is Bx probe
+        -data['By'],
+        -data['Bz'],
+        data['Bx'],
         data['Temperature'],
         data['StagePosition_m'],
         data['StagePosition_steps']
@@ -222,9 +222,9 @@ def save_data_to_csv(data, output_file):
         table,
         delimiter=",",
         header=(
-            "Bx_T,"
-            "By_T,"
-            "Bz_T,"
+            "Bx,"
+            "By,"
+            "Bz,"
             "Temperature,"
             "StagePosition_m,"
             "StagePosition_steps"
@@ -236,9 +236,17 @@ def save_data_to_csv(data, output_file):
     print(f"\nData saved to:\n  {output_file}")
 
 
-def plot_final_data(data, item_names, labels, curve_type, to_show):
+def plot_final_data(
+    data,
+    item_names,
+    labels,
+    curve_type,
+    to_show,
+    png_output_file
+):
     """
-    Plot Hall-probe data against stage position.
+    Plot Hall-probe data against stage position, save the plot as PNG,
+    and display it.
 
     Only data measured at requested target positions are plotted.
     """
@@ -248,8 +256,12 @@ def plot_final_data(data, item_names, labels, curve_type, to_show):
 
     ax1.set_xlabel("Stage position [mm]")
     ax1.set_ylabel("Magnetic field [mT]")
-   # fig.suptitle("Hall probe measurement using "+range_B+" range at "+timestamp)
-    fig.suptitle(f"Hall probe measurement at {x}, {y} using {range_B} range at {timestamp}")
+
+    fig.suptitle(
+        f"Hall probe measurement \n at {x}, {y} "
+        f"using {range_B} range at {timestamp}"
+    )
+
     field_colors = ['tab:blue', 'tab:green', 'tab:red']
 
     lines = []
@@ -260,7 +272,15 @@ def plot_final_data(data, item_names, labels, curve_type, to_show):
         if not show_curve:
             continue
 
-        values = data[item_names[k]]
+        # Flipping (or not) the sign of the data to match the user-defined coordinate system
+        if item_names[k] == 'Bx':
+           values = data[item_names[k]] 
+        if item_names[k] == 'By':
+           values = -data[item_names[k]] 
+        if item_names[k] == 'Bz':
+           values = -data[item_names[k]] 
+        
+       # values = -data[item_names[k]] #"-" sign to flip all fields according to convention
 
         if curve_type[k] == 'F':
             line, = ax1.plot(
@@ -272,8 +292,8 @@ def plot_final_data(data, item_names, labels, curve_type, to_show):
                 color=field_colors[field_count],
                 label=labels[k]
             )
-            field_count += 1
 
+            field_count += 1
             lines.append(line)
             visible_labels.append(labels[k])
 
@@ -282,6 +302,15 @@ def plot_final_data(data, item_names, labels, curve_type, to_show):
 
     ax1.grid(True, alpha=0.3)
     fig.tight_layout()
+
+    # Save the final plot as a high-resolution PNG before displaying it.
+    fig.savefig(
+        png_output_file,
+        dpi=300,
+        bbox_inches='tight'
+    )
+
+    print(f"Plot saved to:\n  {png_output_file}")
 
     plt.show()
 
@@ -318,7 +347,7 @@ class LiveFieldPlot:
 
     Only samples measured during stationary dwell periods are added.
     """
-    
+
     def __init__(self):
         plt.ion()
 
@@ -326,28 +355,21 @@ class LiveFieldPlot:
 
         self.ax.set_xlabel("Stage position [mm]")
         self.ax.set_ylabel("Magnetic field [mT]")
-        #self.ax.set_title("Live Hall-probe measurement")
-        self.ax.set_title(f"Hall probe measurement at {x}, {y} using {range_B} range at {timestamp}")
+        self.ax.set_title(
+            f"Hall probe measurement\n"
+            f"at {x}, {y} using {range_B} range at {timestamp}"
+        )
         self.ax.grid(True, alpha=0.3)
 
         self.lines = {
-            'Bx': self.ax.plot(
-                [],
-                [],
-                marker='o',
-                linestyle='None',
-                markersize=3,
-                color='tab:blue',
-                label='Bx_probe'
-            )[0],
             'By': self.ax.plot(
                 [],
                 [],
                 marker='o',
                 linestyle='None',
                 markersize=3,
-                color='tab:green',
-                label='By_probe'
+                color='tab:blue',
+                label='Bx'
             )[0],
             'Bz': self.ax.plot(
                 [],
@@ -355,8 +377,17 @@ class LiveFieldPlot:
                 marker='o',
                 linestyle='None',
                 markersize=3,
+                color='tab:green',
+                label='By'
+            )[0],
+            'Bx': self.ax.plot(
+                [],
+                [],
+                marker='o',
+                linestyle='None',
+                markersize=3,
                 color='tab:red',
-                label='Bz_probe'
+                label='Bz'
             )[0],
         }
 
@@ -423,17 +454,17 @@ class LiveFieldPlot:
         n_new_samples = end_index - start_index
 
         bx = np.asarray(
-            thm.data_stack['Bx'][start_index:end_index],
+            thm.data_stack['Bx'][start_index:end_index], # "+" sign to account for orientation convention
             dtype=float
         )
 
         by = np.asarray(
-            thm.data_stack['By'][start_index:end_index],
+            -thm.data_stack['By'][start_index:end_index], # "-" sign to account for orientation convention
             dtype=float
         )
 
         bz = np.asarray(
-            thm.data_stack['Bz'][start_index:end_index],
+            -thm.data_stack['Bz'][start_index:end_index], # "-" sign to account for orientation convention
             dtype=float
         )
 
@@ -447,11 +478,11 @@ class LiveFieldPlot:
 
         self.last_index = end_index
 
-        x = np.asarray(self.position_mm)
+        x_values = np.asarray(self.position_mm)
 
         for field_name, line in self.lines.items():
-            y = np.asarray(self.field_mT[field_name])
-            line.set_data(x, y)
+            y_values = np.asarray(self.field_mT[field_name])
+            line.set_data(x_values, y_values)
 
         self.ax.relim()
         self.ax.autoscale_view()
@@ -482,15 +513,48 @@ if __name__ == '__main__':
 
     try:
         # -------------------------------------------------------------
-        # Scan parameters
+        # User-defined scan parameters
         # -------------------------------------------------------------
         z_init_m = 0e-3
         z_final_m = 250e-3
         dz_m = 2e-3
+
         range_B = '0.1T'
-        #range_B = '1T'
-        x='p0000' #string in microns 
-        y='p0000' #string in microns 
+        range_B = '1T'
+
+        x = 'p00690'  # String in microns
+        y = 'p07500'  # String in microns
+
+        # Where to store the data
+        output_dir = Path(
+            "/mn/fys-server1/a1/pierredr/Documents/3-code/HallprobeScanner/data/20261015"
+        )
+         
+        # -------------------------------------------------------------
+        # Create output directories and filenames
+        # -------------------------------------------------------------
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        png_output_dir = output_dir / "png"
+        png_output_dir.mkdir(parents=True, exist_ok=True)
+
+        csv_output_dir = output_dir / "csv"
+        csv_output_dir.mkdir(parents=True, exist_ok=True)
+
+        range_B_csv = '1T'
+
+        if range_B == '0.1T':
+            range_B_csv = '100mT'
+
+        output_file = csv_output_dir / (
+            f"hall_probe_scan_x_{x}_y_{y}_{range_B_csv}_{timestamp}.csv"
+        )
+
+        png_output_file = png_output_dir / (
+            f"hall_probe_scan_x_{x}_y_{y}_{range_B_csv}_{timestamp}.png"
+        )
+
         duration_at_position = 1.0
         position_refresh_period = 0.05
 
@@ -506,14 +570,17 @@ if __name__ == '__main__':
         params = {
             'block_size': 5,
             'period': 1.0 / 20.0,
-            #'range': '0.1T',
             'range': range_B,
             'average': 400,
             'format': 'ASCII'
         }
 
-        item_name = ['Bx', 'By', 'Bz', 'Temperature']
-        labels = ['Bx_probe', 'By_probe', 'Bz_probe', 'T']
+        #item_name = ['Bx', 'By', 'Bz', 'Temperature']
+        #labels = ['hello', 'By_probe', 'Bz_probe', 'T']
+        # Set of variables, with order to match user-defined coordinate system
+        # in our case: Bx_user = -By_probe, By_user = -Bz_probe, Bz_user = Bx_probe   
+        item_name = ['By', 'Bz', 'Bx', 'Temperature'] # user-defined order in which to access generated data from probe (data 'sign' might be changed later on)
+        labels = ['Bx', 'By', 'Bz', 'T'] # user-defined corresponding labels for those data
         curve_type = ['F', 'F', 'F', 'T']
 
         to_show = [True, True, True, False]
@@ -684,23 +751,11 @@ if __name__ == '__main__':
 
         del all_data
 
+
+
         # -------------------------------------------------------------
         # Save CSV
         # -------------------------------------------------------------
-        output_dir = Path(
-            "/mn/fys-server1/a1/pierredr/Documents/"
-            "5-Experiments/20261009_Measurements"
-        )
-        output_dir.mkdir(parents=True, exist_ok=True)
-
-        range_B_csv = '1T'
-        if range_B == '0.1T':
-            range_B_csv = '100mT'
-    
-        output_file = output_dir / (
-            f"hall_probe_scan_x_{x}_y_{y}_{range_B_csv}_{timestamp}.csv"
-        )
-
         save_data_to_csv(data, output_file)
 
         # -------------------------------------------------------------
@@ -718,20 +773,54 @@ if __name__ == '__main__':
         )
 
         # -------------------------------------------------------------
-        # Static final plot
+        # Static final plot and PNG export
         # -------------------------------------------------------------
         plt.ioff()
-
+        
         plot_final_data(
             data,
             item_name,
             labels,
             curve_type,
-            to_show
+            to_show,
+            png_output_file
         )
-
+        
+        # plot_final_data returns only after the displayed plot is closed.
+        plt.close('all')
+        
+        # -------------------------------------------------------------
+        # Return stage to zero
+        # -------------------------------------------------------------
+        home_steps = 0
+        
+        print("\n--------------------------------------------")
+        print("Returning stage to zero...")
+        
+        axis.command_move(home_steps, 0)
+        
+        while True:
+            pos = axis.get_position()
+            current_steps = pos.Position
+            current_m = stepTom(current_steps)
+        
+            print(
+                f"\rPosition: {current_m * 1e3:.3f} mm "
+                f"({current_steps} steps)",
+                end="",
+                flush=True
+            )
+        
+            if current_steps == home_steps:
+                break
+        
+            time.sleep(position_refresh_period)
+        
+        print("\nStage has returned to zero.")
+        
         del data
         data = None
+
 
     except KeyboardInterrupt:
         print("\n\nExperiment stopped by user.")
