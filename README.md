@@ -1,7 +1,7 @@
 # Hall-Probe Magnetic-Field Measurement Using a THM1176-MF
 
 **Date:** 1-12 October 2026 (ongoing)  
-**Script:** `StandaTrans_live.py`
+**Script:** `StandaTrans_live.py`, `manualScan.py`
 
 ## Overview
 
