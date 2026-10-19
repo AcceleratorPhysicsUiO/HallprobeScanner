@@ -16,6 +16,9 @@ import traceback
 
 import numpy as np
 import matplotlib.pyplot as plt
+# Do not bring Matplotlib windows in front of the terminal.
+plt.rcParams["figure.raise_window"] = False
+
 import libximc.highlevel as ximc
 import usbtmc as backend
 import pyTHM1176.api.thm_usbtmc_api as thm_api
@@ -25,17 +28,17 @@ import pyTHM1176.api.thm_usbtmc_api as thm_api
 # -------------------------------------------------------------
 
 # Fixed motorized Z position.
-z_scan_m = 50e-3
+z_scan_m = 162.5e-3
 
 # Choose which manual transverse coordinate is scanned.
-manual_axis_name = "X"   # "X" or "Y"
+manual_axis_name = "Y"   # "X" or "Y"
 
 x_min_um = -1380      # [um] -1380 um means 6mm X gauge 
-x_max_um = +2070      # [um]
+x_max_um = +2120      # [um]
 x_stepsize_um = 100   # [um] 5 per rotation
 
 y_min_um = -10000     # [um] -10 000 um means 24.650mm gauge-Y
-y_max_um = +14650     # [um]
+y_max_um = +15000     # [um]
 y_stepsize_um = 500   # [um] one full rotation
 
 # 20 points at 40 Hz = approximately 0.5 s.

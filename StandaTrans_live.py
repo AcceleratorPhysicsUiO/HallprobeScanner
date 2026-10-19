@@ -519,15 +519,15 @@ if __name__ == '__main__':
         z_final_m = 250e-3
         dz_m = 2e-3
 
-        range_B = '0.1T'
-        #range_B = '1T'
+        #range_B = '0.1T'
+        range_B = '1T'
 
         x = 'p02070'  # String in microns
-        y = 'm10000'  # String in microns
+        y = 'p14650'  # String in microns
 
         # Where to store the data
         output_dir = Path(
-            "/mn/fys-server1/a1/pierredr/Documents/3-code/HallprobeScanner/data/20261016"
+            "/mn/fys-server1/a1/pierredr/Documents/3-code/HallprobeScanner/data/20261019"
         )
          
         # -------------------------------------------------------------
@@ -555,7 +555,7 @@ if __name__ == '__main__':
             f"hall_probe_scan_x_{x}_y_{y}_{range_B_csv}_{timestamp}.png"
         )
 
-        duration_at_position = 1.0
+        duration_at_position = 0.5#1.0
         position_refresh_period = 0.05
 
         z_vec_m = np.arange(
@@ -569,7 +569,7 @@ if __name__ == '__main__':
         # -------------------------------------------------------------
         params = {
             'block_size': 5,
-            'period': 1.0 / 20.0,
+            'period': 1.0 / 40.0,#1.0 / 20.0,
             'range': range_B,
             'average': 400,
             'format': 'ASCII'
