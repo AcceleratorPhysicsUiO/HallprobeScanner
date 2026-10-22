@@ -522,12 +522,12 @@ if __name__ == '__main__':
         #range_B = '0.1T'
         range_B = '1T'
 
-        x = 'p02070'  # String in microns
-        y = 'p14650'  # String in microns
+        x = 'm00000'  # String in microns
+        y = 'm00000'  # String in microns
 
         # Where to store the data
         output_dir = Path(
-            "/mn/fys-server1/a1/pierredr/Documents/3-code/HallprobeScanner/data/20261019"
+            "/mn/fys-server1/a1/pierredr/Documents/3-code/HallprobeScanner/data/20261021"
         )
          
         # -------------------------------------------------------------
