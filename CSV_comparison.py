@@ -200,13 +200,13 @@ if __name__ == "__main__":
     results = compare_magnetic_fields(
         csv1_path=(
             r"/mn/fys-server1/a1/pierredr/Documents/3-code/"
-            r"HallprobeScanner/data/20261021/csv/"
-            r"hall_probe_scan_x_m00000_y_m00000_1T_2026-10-21_17-24-47.csv"
+            r"HallprobeScanner/data/20261027/csv/"
+            r"hall_probe_scan_x_m00000_y_p15150_1T_2026-10-27_17-13-08.csv"
         ),
         csv2_path=(
             r"/mn/fys-server1/a1/pierredr/Documents/3-code/"
-            r"HallprobeScanner/data/20261021/csv/"
-            r"hall_probe_scan_x_m00000_y_m00000_1T_2026-10-21_17-34-26.csv"
+            r"HallprobeScanner/data/20261027/csv/"
+            r"hall_probe_scan_x_m00000_y_p15150_1T_2026-10-27_17-48-08.csv"
         ),
         # tolerance=1e-6,
     )
